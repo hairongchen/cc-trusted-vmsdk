@@ -17,8 +17,8 @@ name = "cc-sample-eventlog"
 path = "src/cc-sample-eventlog.rs"
 
 [dependencies]
-cctrusted_vm = { path = "../cctrusted_vm" }
-cctrusted_base = { git="https://github.com/cc-api/cc-trusted-vmsdk" }
+cctrusted_vm = { git="https://github.com/cc-api/cc-trusted-vmsdk" }
+cctrusted_base = { git="https://github.com/cc-api/cc-trusted-api" }
 anyhow = "1.0"
 log = "0.4.20"
 env_logger = "0.10.1"
