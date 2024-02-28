@@ -24,6 +24,7 @@ use std::io::BufReader;
 use std::io::Read;
 use std::os::fd::AsRawFd;
 use std::path::Path;
+use vsock::{get_local_cid, VsockAddr, VsockStream};
 
 // TDX ioctl operation code to be used for get TDX quote and TD Report
 pub enum TdxOperation {
@@ -221,6 +222,79 @@ impl CVM for TdxVM {
 
         //build QGS request message
         let qgs_msg = Tdx::generate_qgs_quote_msg(report_data_array);
+        let qgs_msg_bytes = unsafe {
+            let ptr = &qgs_msg as *const qgs_msg_get_quote_req as *const u8;
+            core::slice::from_raw_parts(ptr, mem::size_of::<qgs_msg_get_quote_req>())
+        };
+
+        // use TDVMCALL by default except vsock config exists at ATTEST_CFG_FILE_PATH
+        let mut tdvmcall_flag = true;
+        let mut port: u32;
+        if Path::new(CFG_FILE_PATH).exists() {
+            let data_lines: Vec<String> = read_to_string(ATTEST_CFG_FILE_PATH)
+            .unwrap()
+            .lines()
+            .map(String::from)
+            .collect();
+
+            for line in data_lines {
+                if line.contains("port") {
+                    let element = line.split('=').last().trim_matches(' ');
+                    port = element.parse().unwrap();
+                    if port >= 65536 {
+                        return Err(anyhow!("[process_cc_report] invalid vsock port config at {}", ATTEST_CFG_FILE_PATH));
+                    }
+                    tdvmcall_flag = true;
+                    break;
+                }
+            }
+        }
+
+        // get quote wit vsock instead of TDVMCALL
+        if !tdvmcall_flag {          
+            let header_size: u32 = 4;
+            let qgs_msg_bytes_array: [u8; 16 + 8 + TDX_REPORT_LEN] = unsafe { transmute(qgs_msg) };
+            let msg_size = qgs_msg_bytes_array.len();
+            let msg_size_bytes_array: [u8; header_size] = unsafe { transmute(msg_size.to_be()) }; 
+
+            let p_blob_payload = [0; header_size + msg_size];
+            p_blob_payload[..4].copy_from_slice(&msg_size_bytes_array);
+            p_blob_payload[4..].copy_from_slice(&qgs_msg_bytes_array);
+
+            let mut qgs_stream = VsockStream::connect(&VsockAddr::new(get_local_cid().unwrap(), port)).expect("vsocket connection failed");
+            let written_bytes = qgs_stream
+                .write(&p_blob_payload)
+                .expect("[process_cc_report] write to qgs vsock failed");
+            if written_bytes == 0 {
+                return Err(anyhow!("[process_cc_report] write to qgs vsock failed"));
+            }
+
+            let mut return_size_bytes_array = [0;4];
+            let read_bytes = qgs_stream.read(&mut return_size_bytes_array).expect("[process_cc_report] read from qgs vsock failed");
+            if read_bytes == 0 {
+                return Err(anyhow!("[process_cc_report] read from qgs vsock failed"));
+            }
+
+            let mut in_msg_size = 0;
+            for i in 0..header_size {
+                in_msg_size = (in_msg_size << 8) + (return_size_bytes_array[i] & 0xFF);
+            }
+
+            let mut return_quote_bytes_array = [0;in_msg_size];
+            let read_qgs_response_bytes = qgs_stream.read(&mut return_quote_bytes_array).expect("[process_cc_report] read from qgs vsock failed");
+            if read_qgs_response_bytes == 0 {
+                return Err(anyhow!("[process_cc_report] read from qgs vsock failed"));
+            }
+
+            let qgs_msg_resp = unsafe {
+                let raw_ptr = ptr::addr_of!(read_qgs_response_bytes) as *mut qgs_msg_get_quote_resp;
+                raw_ptr.as_mut().unwrap() as &mut qgs_msg_get_quote_resp
+            };
+
+            qgs_stream.shutdown();
+            
+            return Ok(qgs_msg_resp.id_quote[0..(qgs_msg_resp.quote_size as usize)].to_vec());
+        }
 
         //build quote generation request header
         let mut quote_header = tdx_quote_hdr {
@@ -232,10 +306,6 @@ impl CVM for TdxVM {
             data: [0; TDX_QUOTE_LEN],
         };
 
-        let qgs_msg_bytes = unsafe {
-            let ptr = &qgs_msg as *const qgs_msg_get_quote_req as *const u8;
-            core::slice::from_raw_parts(ptr, mem::size_of::<qgs_msg_get_quote_req>())
-        };
         quote_header.data[0..(16 + 8 + TDX_REPORT_LEN) as usize]
             .copy_from_slice(&qgs_msg_bytes[0..((16 + 8 + TDX_REPORT_LEN) as usize)]);
 
