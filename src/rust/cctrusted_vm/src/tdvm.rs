@@ -12,7 +12,7 @@ use cctrusted_base::tdx::quote::*;
 use cctrusted_base::tdx::report::*;
 use cctrusted_base::tdx::rtmr::TdxRTMR;
 use core::convert::TryInto;
-use core::mem;
+use core::mem::*;
 use core::ptr;
 use core::result::Result;
 use core::result::Result::Ok;
@@ -222,6 +222,7 @@ impl CVM for TdxVM {
 
         //build QGS request message
         let qgs_msg = Tdx::generate_qgs_quote_msg(report_data_array);
+
         let qgs_msg_bytes = unsafe {
             let ptr = &qgs_msg as *const qgs_msg_get_quote_req as *const u8;
             core::slice::from_raw_parts(ptr, mem::size_of::<qgs_msg_get_quote_req>())
@@ -230,7 +231,8 @@ impl CVM for TdxVM {
         // use TDVMCALL by default except vsock config exists at ATTEST_CFG_FILE_PATH
         let mut tdvmcall_flag = true;
         let mut port: u32;
-        if Path::new(CFG_FILE_PATH).exists() {
+        const ATTEST_CFG_FILE_PATH: &str = "/etc/tdx-attest.conf";
+        if Path::new(ATTEST_CFG_FILE_PATH).exists() {
             let data_lines: Vec<String> = read_to_string(ATTEST_CFG_FILE_PATH)
             .unwrap()
             .lines()
@@ -239,7 +241,7 @@ impl CVM for TdxVM {
 
             for line in data_lines {
                 if line.contains("port") {
-                    let element = line.split('=').last().trim_matches(' ');
+                    let element = line.split('=').last().expect("[process_cc_report] invalid vsock port config").trim_matches(' ');
                     port = element.parse().unwrap();
                     if port >= 65536 {
                         return Err(anyhow!("[process_cc_report] invalid vsock port config at {}", ATTEST_CFG_FILE_PATH));
@@ -252,7 +254,7 @@ impl CVM for TdxVM {
 
         // get quote wit vsock instead of TDVMCALL
         if !tdvmcall_flag {          
-            let header_size: u32 = 4;
+            const header_size: u32 = 4;
             let qgs_msg_bytes_array: [u8; 16 + 8 + TDX_REPORT_LEN] = unsafe { transmute(qgs_msg) };
             let msg_size = qgs_msg_bytes_array.len();
             let msg_size_bytes_array: [u8; header_size] = unsafe { transmute(msg_size.to_be()) }; 
@@ -292,7 +294,7 @@ impl CVM for TdxVM {
             };
 
             qgs_stream.shutdown();
-            
+
             return Ok(qgs_msg_resp.id_quote[0..(qgs_msg_resp.quote_size as usize)].to_vec());
         }
 
