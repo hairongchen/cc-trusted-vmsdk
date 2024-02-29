@@ -295,7 +295,7 @@ impl CVM for TdxVM {
             // };
 
             let written_bytes = qgs_vsocket
-                .send(&p_blob_payload)
+                .write(&p_blob_payload)
                 .expect("[process_cc_report] write to qgs vsock failed");
             if written_bytes == 0 {
                 return Err(anyhow!("[process_cc_report] write to qgs vsock failed"));
