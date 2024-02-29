@@ -23,7 +23,7 @@ use std::fs::File;
 use std::io::BufReader;
 use std::os::fd::AsRawFd;
 use std::path::Path;
-use vsock::{get_local_cid, VsockAddr, VsockStream};
+use vsock::{get_local_cid, VsockAddr, VsockStream, VMADDR_CID_HOST};
 use std::io::{Read, Write};
 use std::net::Shutdown;
 
