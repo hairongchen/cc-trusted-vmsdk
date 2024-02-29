@@ -282,7 +282,7 @@ impl CVM for TdxVM {
                 in_msg_size = (in_msg_size << 8) + (return_size_bytes_array[i] & 0xFF);
             }
 
-            let return_quote_bytes_array: [0;in_msg_size];
+            let return_quote_bytes_array: [u8; in_msg_size];
             let read_qgs_response_bytes = qgs_stream.read(&mut return_quote_bytes_array).expect("[process_cc_report] read from qgs vsock failed");
             if read_qgs_response_bytes == 0 {
                 return Err(anyhow!("[process_cc_report] read from qgs vsock failed"));
