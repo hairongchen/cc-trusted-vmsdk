@@ -283,7 +283,7 @@ impl CVM for TdxVM {
 
             //let socket = unsafe { std::os::unix::net::UnixStream::from_raw_fd(socket) };
 
-            let qgs_stream = connect(qgs_vsocket.as_raw_fd(), &vsock_addr)
+            connect(qgs_vsocket.as_raw_fd(), &vsock_addr)
                 .with_context(|| format!("failed to connect to qgs vsock"))?;
 
                 
@@ -294,15 +294,13 @@ impl CVM for TdxVM {
             //     }
             // };
 
-            let written_bytes = qgs_stream
-                .write(&p_blob_payload)
-                .expect("[process_cc_report] write to qgs vsock failed");
+            let written_bytes = send(qgs_vsocket.as_raw_fd(), &p_blob_payload);
             if written_bytes == 0 {
                 return Err(anyhow!("[process_cc_report] write to qgs vsock failed"));
             }
 
             let mut return_size_bytes_array = [0;4];
-            let read_bytes = qgs_stream.read(&mut return_size_bytes_array).expect("[process_cc_report] read from qgs vsock failed");
+            let read_bytes = recv(qgs_vsocket.as_raw_fd(), &mut return_size_bytes_array);
             if read_bytes == 0 {
                 return Err(anyhow!("[process_cc_report] read from qgs vsock failed"));
             }
@@ -313,7 +311,7 @@ impl CVM for TdxVM {
             }
 
             let mut return_quote_bytes_array = Vec::new();
-            let read_qgs_response_bytes = qgs_stream.read_to_end(&mut return_quote_bytes_array).expect("[process_cc_report] read from qgs vsock failed");
+            let read_qgs_response_bytes = recv(qgs_vsocket.as_raw_fd(), &mut return_quote_bytes_array);
             if read_qgs_response_bytes == 0 {
                 return Err(anyhow!("[process_cc_report] read from qgs vsock failed"));
             }
