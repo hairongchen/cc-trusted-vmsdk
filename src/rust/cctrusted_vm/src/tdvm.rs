@@ -301,7 +301,7 @@ impl CVM for TdxVM {
             }
 
             let mut return_size_bytes_array = [0;4];
-            let read_bytes = recv(qgs_vsocket.as_raw_fd(), &mut return_size_bytes_array);
+            let read_bytes = recv(qgs_vsocket.as_raw_fd(), &mut return_size_bytes_array, MsgFlags::empty());
             if read_bytes == 0 {
                 return Err(anyhow!("[process_cc_report] read from qgs vsock failed"));
             }
@@ -312,7 +312,7 @@ impl CVM for TdxVM {
             }
 
             let mut return_quote_bytes_array = Vec::new();
-            let read_qgs_response_bytes = recv(qgs_vsocket.as_raw_fd(), &mut return_quote_bytes_array);
+            let read_qgs_response_bytes = recv(qgs_vsocket.as_raw_fd(), &mut return_quote_bytes_array, MsgFlags::empty());
             if read_qgs_response_bytes == 0 {
                 return Err(anyhow!("[process_cc_report] read from qgs vsock failed"));
             }
