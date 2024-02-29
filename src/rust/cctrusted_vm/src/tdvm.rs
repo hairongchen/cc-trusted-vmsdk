@@ -281,7 +281,7 @@ impl CVM for TdxVM {
             )
             .context("failed to create vsock socket")?;
 
-            //let socket = unsafe { std::os::unix::net::UnixStream::from_raw_fd(socket) };
+            let socket = unsafe { std::os::unix::net::UnixStream::from_raw_fd(socket) };
 
             connect(qgs_vsocket.as_raw_fd(), &vsock_addr)
                 .with_context(|| format!("failed to connect to qgs vsock"))?;
@@ -323,7 +323,8 @@ impl CVM for TdxVM {
                 raw_ptr.as_mut().unwrap() as &mut qgs_msg_get_quote_resp
             };
 
-            let _ = qgs_stream.shutdown(Shutdown::Both);
+            //let _ = qgs_stream.shutdown(Shutdown::Both);
+            qgs_vsocket.close();
 
             return Ok(qgs_msg_resp.id_quote[0..(qgs_msg_resp.quote_size as usize)].to_vec());
         }
