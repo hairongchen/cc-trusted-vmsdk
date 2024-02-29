@@ -21,10 +21,10 @@ use nix::*;
 use std::fs::read_to_string;
 use std::fs::File;
 use std::io::BufReader;
-use std::io::Read;
 use std::os::fd::AsRawFd;
 use std::path::Path;
 use vsock::{get_local_cid, VsockAddr, VsockStream};
+use std::io::{Read, Write};
 
 // TDX ioctl operation code to be used for get TDX quote and TD Report
 pub enum TdxOperation {
