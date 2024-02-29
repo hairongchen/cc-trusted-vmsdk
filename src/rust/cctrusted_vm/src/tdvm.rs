@@ -231,7 +231,7 @@ impl CVM for TdxVM {
 
         // use TDVMCALL by default except vsock config exists at ATTEST_CFG_FILE_PATH
         let mut tdvmcall_flag = true;
-        let mut port: u32;
+        let port: u32;
         const ATTEST_CFG_FILE_PATH: &str = "/etc/tdx-attest.conf";
         if Path::new(ATTEST_CFG_FILE_PATH).exists() {
             let data_lines: Vec<String> = read_to_string(ATTEST_CFG_FILE_PATH)
@@ -260,7 +260,7 @@ impl CVM for TdxVM {
             let msg_size: u32 = qgs_msg_bytes_array.len().try_into().unwrap();
             let msg_size_bytes_array: [u8; header_size as usize] = unsafe { transmute(msg_size.to_be()) }; 
 
-            let p_blob_payload = [0; (header_size + 16 + 8 + TDX_REPORT_LEN) as usize];
+            let mut p_blob_payload = [0; (header_size + 16 + 8 + TDX_REPORT_LEN) as usize];
             p_blob_payload[..4].copy_from_slice(&msg_size_bytes_array);
             p_blob_payload[4..].copy_from_slice(&qgs_msg_bytes_array);
 
