@@ -280,7 +280,7 @@ impl CVM for TdxVM {
 
             let mut in_msg_size = 0;
             for i in 0..header_size {
-                in_msg_size = (in_msg_size << 8) + (return_size_bytes_array[i] & 0xFF);
+                in_msg_size = (in_msg_size << 8) + (return_size_bytes_array[i as usize] & 0xFF);
             }
 
             let mut return_quote_bytes_array = Vec::new();
