@@ -23,7 +23,7 @@ use std::fs::File;
 use std::io::BufReader;
 use std::os::fd::AsRawFd;
 use std::path::Path;
-use std::io::{Read, Write};
+use std::io::Read;
 use nix::sys::socket::*;
 use vsock::VMADDR_CID_HOST;
 
