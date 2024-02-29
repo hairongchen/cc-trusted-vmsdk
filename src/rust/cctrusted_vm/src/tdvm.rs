@@ -278,7 +278,7 @@ impl CVM for TdxVM {
                 return Err(anyhow!("[process_cc_report] read from qgs vsock failed"));
             }
 
-            let mut in_msg_size = 0;
+            let mut in_msg_size: u32 = 0;
             for i in 0..header_size {
                 in_msg_size = (in_msg_size << 8) + (return_size_bytes_array[i as usize] & 0xFF);
             }
