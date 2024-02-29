@@ -283,7 +283,7 @@ impl CVM for TdxVM {
 
             //let socket = unsafe { std::os::unix::net::UnixStream::from_raw_fd(socket) };
 
-            connect(qgs_vsocket.as_raw_fd(), &vsock_addr)
+            let qgs_stream = connect(qgs_vsocket.as_raw_fd(), &vsock_addr)
                 .with_context(|| format!("failed to connect to qgs vsock"))?;
 
                 
