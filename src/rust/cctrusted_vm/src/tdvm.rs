@@ -257,7 +257,7 @@ impl CVM for TdxVM {
         if !tdvmcall_flag {          
             const header_size: u32 = 4;
             let qgs_msg_bytes_array: [u8; (16 + 8 + TDX_REPORT_LEN) as usize] = unsafe { transmute(qgs_msg) };
-            let msg_size: u32 = qgs_msg_bytes_array.len();
+            let msg_size: u32 = qgs_msg_bytes_array.len().try_into().unwrap();
             let msg_size_bytes_array: [u8; header_size as usize] = unsafe { transmute(msg_size.to_be()) }; 
 
             let p_blob_payload = [0; (header_size + 16 + 8 + TDX_REPORT_LEN) as usize];
