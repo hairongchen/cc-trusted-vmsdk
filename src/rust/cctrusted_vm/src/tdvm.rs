@@ -24,12 +24,8 @@ use std::io::BufReader;
 use std::os::fd::AsRawFd;
 use std::path::Path;
 use std::io::{Read, Write};
-//use std::net::Shutdown;
-//use nix::sys::socket::{MsgFlags, connect, socket, send, recv, shutdown, Shutdown, AddressFamily, SockFlag, SockType, VsockAddr};
 use nix::sys::socket::*;
-use std::os::unix::net::UnixStream;
-use tokio_stream::Stream;
-use vsock::VMADDR_CID_HOST;
+//use vsock::VMADDR_CID_HOST;
 
 // TDX ioctl operation code to be used for get TDX quote and TD Report
 pub enum TdxOperation {
@@ -322,7 +318,7 @@ impl CVM for TdxVM {
                 raw_ptr.as_mut().unwrap() as &mut qgs_msg_get_quote_resp
             };
 
-            shutdown(Shutdown::Both);
+            shutdown(qgs_vsocket.as_raw_fd(), Shutdown::Both);
 
             return Ok(qgs_msg_resp.id_quote[0..(qgs_msg_resp.quote_size as usize)].to_vec());
         }
