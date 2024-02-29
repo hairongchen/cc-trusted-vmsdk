@@ -283,7 +283,7 @@ impl CVM for TdxVM {
             connect(qgs_vsocket.as_raw_fd(), &vsock_addr)
                 .with_context(|| format!("[get_td_report] failed to connect to qgs vsock"))?;
 
-            match send(qgs_vsocket.as_raw_fd(), &p_blob_payload, MsgFlags::empty()){
+            match send(qgs_vsocket.as_raw_fd(), &p_blob_payload, MsgFlags::empty()) {
                 Ok(written_bytes) =>{
                      if written_bytes == 0 {
                         return Err(anyhow!("[process_cc_report] write to qgs vsock failed"));
@@ -292,14 +292,14 @@ impl CVM for TdxVM {
                 Err(e) => return Err(anyhow!("[get_td_report] Fail to send to qgs vsock"))
             }
 
-            if written_bytes == 0 {
-                return Err(anyhow!("[process_cc_report] write to qgs vsock failed"));
-            }
-
             let mut return_size_bytes_array = [0;4];
-            let read_bytes = recv(qgs_vsocket.as_raw_fd(), &mut return_size_bytes_array, MsgFlags::empty());
-            if read_bytes == 0 {
-                return Err(anyhow!("[process_cc_report] read from qgs vsock failed"));
+            match recv(qgs_vsocket.as_raw_fd(), &mut return_size_bytes_array, MsgFlags::empty()) {
+                Ok(read_bytes) =>{
+                    if read_bytes == 0 {
+                       return Err(anyhow!("[process_cc_report] read from qgs vsock failed"));
+                   }
+               },
+               Err(e) => return Err(anyhow!("[get_td_report] Fail to read from qgs vsock"))
             }
 
             let mut in_msg_size = 0;
@@ -308,9 +308,13 @@ impl CVM for TdxVM {
             }
 
             let mut return_quote_bytes_array = Vec::new();
-            let read_qgs_response_bytes = recv(qgs_vsocket.as_raw_fd(), &mut return_quote_bytes_array, MsgFlags::empty());
-            if read_qgs_response_bytes == 0 {
-                return Err(anyhow!("[process_cc_report] read from qgs vsock failed"));
+            match recv(qgs_vsocket.as_raw_fd(), &mut return_quote_bytes_array, MsgFlags::empty()) {
+                Ok(read_qgs_response_bytes) =>{
+                    if read_qgs_response_bytes == 0 {
+                       return Err(anyhow!("[process_cc_report] read from qgs vsock failed"));
+                   }
+               },
+               Err(e) => return Err(anyhow!("[get_td_report] Fail to read from qgs vsock"))
             }
 
             let qgs_msg_resp = unsafe {
