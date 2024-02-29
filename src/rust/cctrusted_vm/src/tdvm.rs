@@ -234,6 +234,7 @@ impl CVM for TdxVM {
         let mut port: u32 = 0;
         const ATTEST_CFG_FILE_PATH: &str = "/etc/tdx-attest.conf";
         if Path::new(ATTEST_CFG_FILE_PATH).exists() {
+            log::info!("######################## here");
             let data_lines: Vec<String> = read_to_string(ATTEST_CFG_FILE_PATH)
             .unwrap()
             .lines()
@@ -295,7 +296,7 @@ impl CVM for TdxVM {
             };
 
             let _ = qgs_stream.shutdown(Shutdown::Both);
-            log::info!("OK");
+
             return Ok(qgs_msg_resp.id_quote[0..(qgs_msg_resp.quote_size as usize)].to_vec());
         }
 
