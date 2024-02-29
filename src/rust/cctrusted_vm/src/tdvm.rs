@@ -225,7 +225,7 @@ impl CVM for TdxVM {
 
         let qgs_msg_bytes = unsafe {
             let ptr = &qgs_msg as *const qgs_msg_get_quote_req as *const u8;
-            core::slice::from_raw_parts(ptr, mem::size_of::<qgs_msg_get_quote_req>())
+            core::slice::from_raw_parts(ptr, size_of::<qgs_msg_get_quote_req>())
         };
 
         // use TDVMCALL by default except vsock config exists at ATTEST_CFG_FILE_PATH
@@ -302,7 +302,7 @@ impl CVM for TdxVM {
         let mut quote_header = tdx_quote_hdr {
             version: 1,
             status: 0,
-            in_len: (mem::size_of_val(&qgs_msg) + 4) as u32,
+            in_len: (size_of_val(&qgs_msg) + 4) as u32,
             out_len: 0,
             data_len_be_bytes: (1048_u32).to_be_bytes(),
             data: [0; TDX_QUOTE_LEN],
@@ -376,7 +376,7 @@ impl CVM for TdxVM {
         //inspect the response and retrive quote data
         let out_len = quote_header.out_len;
         let qgs_msg_resp_size =
-            unsafe { core::mem::transmute::<[u8; 4], u32>(quote_header.data_len_be_bytes) }.to_be();
+            unsafe { transmute::<[u8; 4], u32>(quote_header.data_len_be_bytes) }.to_be();
 
         let qgs_msg_resp = unsafe {
             let raw_ptr = ptr::addr_of!(quote_header.data) as *mut qgs_msg_get_quote_resp;
