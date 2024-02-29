@@ -23,9 +23,10 @@ use std::fs::File;
 use std::io::BufReader;
 use std::os::fd::AsRawFd;
 use std::path::Path;
-use vsock::{get_local_cid, VsockAddr, VsockStream, VMADDR_CID_HOST};
 use std::io::{Read, Write};
 use std::net::Shutdown;
+use nix::sys::socket::{connect, socket, AddressFamily, SockFlag, SockType, VsockAddr, VMADDR_CID_HOST};
+use tokio::net::UnixStream;
 
 // TDX ioctl operation code to be used for get TDX quote and TD Report
 pub enum TdxOperation {
@@ -289,7 +290,7 @@ impl CVM for TdxVM {
                 Err(_) => {
                     return Err(anyhow!("[process_cc_report] connect to qgs vsock failed"));
                 }
-            }
+            };
 
             let written_bytes = qgs_stream
                 .write(&p_blob_payload)
