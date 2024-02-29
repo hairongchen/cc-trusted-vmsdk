@@ -25,7 +25,7 @@ use std::os::fd::AsRawFd;
 use std::path::Path;
 use std::io::{Read, Write};
 use nix::sys::socket::*;
-//use vsock::VMADDR_CID_HOST;
+use vsock::VMADDR_CID_HOST;
 
 // TDX ioctl operation code to be used for get TDX quote and TD Report
 pub enum TdxOperation {
