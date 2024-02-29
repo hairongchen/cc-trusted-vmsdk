@@ -284,7 +284,7 @@ impl CVM for TdxVM {
                 .with_context(|| format!("[get_td_report] failed to connect to qgs vsock"))?;
 
             match send(qgs_vsocket.as_raw_fd(), &p_blob_payload, MsgFlags::empty()){
-                Ok(bytes) =>{
+                Ok(written_bytes) =>{
                      if written_bytes == 0 {
                         return Err(anyhow!("[process_cc_report] write to qgs vsock failed"));
                     }
