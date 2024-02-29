@@ -322,7 +322,7 @@ impl CVM for TdxVM {
                 raw_ptr.as_mut().unwrap() as &mut qgs_msg_get_quote_resp
             };
 
-            shutdown(qgs_vsocket.as_raw_fd(), Shutdown::Both);
+            let _ = shutdown(qgs_vsocket.as_raw_fd(), Shutdown::Both);
 
             return Ok(qgs_msg_resp.id_quote[0..(qgs_msg_resp.quote_size as usize)].to_vec());
         }
