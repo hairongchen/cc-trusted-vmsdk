@@ -318,7 +318,7 @@ impl CVM for TdxVM {
             }
 
             let qgs_msg_resp = unsafe {
-                let raw_ptr = ptr::addr_of!(read_qgs_response_bytes) as *mut qgs_msg_get_quote_resp;
+                let raw_ptr = ptr::addr_of!(return_quote_bytes_array) as *mut qgs_msg_get_quote_resp;
                 raw_ptr.as_mut().unwrap() as &mut qgs_msg_get_quote_resp
             };
 
