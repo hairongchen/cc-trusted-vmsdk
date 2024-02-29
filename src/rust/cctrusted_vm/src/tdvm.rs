@@ -25,6 +25,7 @@ use std::os::fd::AsRawFd;
 use std::path::Path;
 use vsock::{get_local_cid, VsockAddr, VsockStream};
 use std::io::{Read, Write};
+use std::net::Shutdown;
 
 // TDX ioctl operation code to be used for get TDX quote and TD Report
 pub enum TdxOperation {
