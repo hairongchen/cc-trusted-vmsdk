@@ -281,7 +281,7 @@ impl CVM for TdxVM {
             )
             .context("failed to create vsock socket")?;
 
-            let socket = unsafe { std::os::unix::net::UnixStream::from_raw_fd(socket) };
+            //let socket = unsafe { std::os::unix::net::UnixStream::from_raw_fd(socket) };
 
             connect(qgs_vsocket.as_raw_fd(), &vsock_addr)
                 .with_context(|| format!("failed to connect to qgs vsock"))?;
@@ -301,9 +301,9 @@ impl CVM for TdxVM {
                 return Err(anyhow!("[process_cc_report] write to qgs vsock failed"));
             }
 
-            //let mut return_size_bytes_array = [0;4];
-            let return_size_bytes_array = qgs_vsocket.recv(HEADER_SIZE).expect("[process_cc_report] read from qgs vsock failed");
-            if return_size_bytes_array.len() == 0 {
+            let mut return_size_bytes_array = [0;4];
+            let read_bytes = qgs_stream.read(&mut return_size_bytes_array).expect("[process_cc_report] read from qgs vsock failed");
+            if read_bytes == 0 {
                 return Err(anyhow!("[process_cc_report] read from qgs vsock failed"));
             }
 
@@ -313,18 +313,17 @@ impl CVM for TdxVM {
             }
 
             let mut return_quote_bytes_array = Vec::new();
-            let return_quote_bytes_array = qgs_vsocket.recv(in_msg_size).expect("[process_cc_report] read from qgs vsock failed");
-            if return_quote_bytes_array.len() == 0 {
+            let read_qgs_response_bytes = qgs_stream.read_to_end(&mut return_quote_bytes_array).expect("[process_cc_report] read from qgs vsock failed");
+            if read_qgs_response_bytes == 0 {
                 return Err(anyhow!("[process_cc_report] read from qgs vsock failed"));
             }
 
             let qgs_msg_resp = unsafe {
-                let raw_ptr = ptr::addr_of!(return_quote_bytes_array) as *mut qgs_msg_get_quote_resp;
+                let raw_ptr = ptr::addr_of!(read_qgs_response_bytes) as *mut qgs_msg_get_quote_resp;
                 raw_ptr.as_mut().unwrap() as &mut qgs_msg_get_quote_resp
             };
 
-            //let _ = qgs_stream.shutdown(Shutdown::Both);
-            qgs_vsocket.close();
+            let _ = qgs_stream.shutdown(Shutdown::Both);
 
             return Ok(qgs_msg_resp.id_quote[0..(qgs_msg_resp.quote_size as usize)].to_vec());
         }
