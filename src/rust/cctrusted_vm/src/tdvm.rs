@@ -266,8 +266,31 @@ impl CVM for TdxVM {
             p_blob_payload[4..].copy_from_slice(&qgs_msg_bytes_array);
 
             //let mut qgs_stream = VsockStream::connect(&VsockAddr::new(get_local_cid().unwrap(), port)).expect("vsocket connection failed");
-            let mut qgs_stream = VsockStream::connect(&VsockAddr::new(VMADDR_CID_HOST, 4050)).expect("vsocket connection failed");
+            //let mut qgs_stream = VsockStream::connect(&VsockAddr::new(VMADDR_CID_HOST, 4050)).expect("vsocket connection failed");
             //let qgs_stream = socket(AF_VSOCK, SOCK_STREAM, 0);
+            let retry_times = 5;
+            let sock_addr = VsockAddr::new(self.vsock_cid, self.port);
+            let socket = socket(
+                AddressFamily::Vsock,
+                SockType::Stream,
+                SockFlag::empty(),
+                None,
+            )
+            .context("failed to create vsock socket")?;
+
+            let socket = unsafe { std::os::unix::net::UnixStream::from_raw_fd(socket) };
+
+            connect(socket.as_raw_fd(), &sock_addr)
+                .with_context(|| format!("failed to connect to {}", sock_addr))?;
+
+                
+            let qgs_stream = match UnixStream::from_std(socket).context("from_std") {
+                Ok(stream) => Stream::Vsock(stream),
+                Err(_) => {
+                    return Err(anyhow!("[process_cc_report] connect to qgs vsock failed"));
+                }
+            }
+
             let written_bytes = qgs_stream
                 .write(&p_blob_payload)
                 .expect("[process_cc_report] write to qgs vsock failed");
