@@ -29,6 +29,7 @@ use nix::sys::socket::{connect, socket, AddressFamily, SockFlag, SockType, Vsock
 use std::os::unix::net::UnixStream;
 use tokio_stream::Stream;
 use vsock::VMADDR_CID_HOST;
+use nix::sys::socket::{send, recv};
 
 // TDX ioctl operation code to be used for get TDX quote and TD Report
 pub enum TdxOperation {
