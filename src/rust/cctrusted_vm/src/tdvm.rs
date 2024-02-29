@@ -255,12 +255,12 @@ impl CVM for TdxVM {
 
         // get quote wit vsock instead of TDVMCALL
         if !tdvmcall_flag {          
-            const header_size: u32 = 4;
+            const HEADER_SIZE: u32 = 4;
             let qgs_msg_bytes_array: [u8; (16 + 8 + TDX_REPORT_LEN) as usize] = unsafe { transmute(qgs_msg) };
             let msg_size: u32 = qgs_msg_bytes_array.len().try_into().unwrap();
-            let msg_size_bytes_array: [u8; header_size as usize] = unsafe { transmute(msg_size.to_be()) }; 
+            let msg_size_bytes_array: [u8; HEADER_SIZE as usize] = unsafe { transmute(msg_size.to_be()) }; 
 
-            let mut p_blob_payload = [0; (header_size + 16 + 8 + TDX_REPORT_LEN) as usize];
+            let mut p_blob_payload = [0; (HEADER_SIZE + 16 + 8 + TDX_REPORT_LEN) as usize];
             p_blob_payload[..4].copy_from_slice(&msg_size_bytes_array);
             p_blob_payload[4..].copy_from_slice(&qgs_msg_bytes_array);
 
@@ -279,7 +279,7 @@ impl CVM for TdxVM {
             }
 
             let mut in_msg_size = 0;
-            for i in 0..header_size {
+            for i in 0..HEADER_SIZE {
                 in_msg_size = (in_msg_size << 8) + (return_size_bytes_array[i as usize] & 0xFF) as u32;
             }
 
@@ -294,7 +294,7 @@ impl CVM for TdxVM {
                 raw_ptr.as_mut().unwrap() as &mut qgs_msg_get_quote_resp
             };
 
-            qgs_stream.shutdown(Shutdown::Both);
+            let _ = qgs_stream.shutdown(Shutdown::Both);
 
             return Ok(qgs_msg_resp.id_quote[0..(qgs_msg_resp.quote_size as usize)].to_vec());
         }
