@@ -266,7 +266,7 @@ impl CVM for TdxVM {
             p_blob_payload[4..].copy_from_slice(&qgs_msg_bytes_array);
 
             //let mut qgs_stream = VsockStream::connect(&VsockAddr::new(get_local_cid().unwrap(), port)).expect("vsocket connection failed");
-            let mut qgs_stream = VsockStream::connect(&VsockAddr::new(vsock::VMADDR_CID_HOST, 4050)).expect("vsocket connection failed");
+            let mut qgs_stream = VsockStream::connect(&VsockAddr::new(3, 4050)).expect("vsocket connection failed");
             //let qgs_stream = socket(AF_VSOCK, SOCK_STREAM, 0);
             let written_bytes = qgs_stream
                 .write(&p_blob_payload)
