@@ -25,7 +25,7 @@ use std::os::fd::AsRawFd;
 use std::path::Path;
 use std::io::{Read, Write};
 //use std::net::Shutdown;
-use nix::sys::socket::{connect, socket, send, recv, shutdown, Shutdown, AddressFamily, SockFlag, SockType, VsockAddr};
+use nix::sys::socket::{MsgFlags, connect, socket, send, recv, shutdown, Shutdown, AddressFamily, SockFlag, SockType, VsockAddr};
 use std::os::unix::net::UnixStream;
 use tokio_stream::Stream;
 use vsock::VMADDR_CID_HOST;
