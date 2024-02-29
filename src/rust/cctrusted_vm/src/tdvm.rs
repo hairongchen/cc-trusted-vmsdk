@@ -27,6 +27,7 @@ use std::io::{Read, Write};
 use std::net::Shutdown;
 use nix::sys::socket::{connect, socket, AddressFamily, SockFlag, SockType, VsockAddr, VMADDR_CID_HOST};
 use std::os::unix::net::UnixStream;
+use tokio_stream::Stream;
 
 // TDX ioctl operation code to be used for get TDX quote and TD Report
 pub enum TdxOperation {
@@ -270,7 +271,7 @@ impl CVM for TdxVM {
             //let mut qgs_stream = VsockStream::connect(&VsockAddr::new(VMADDR_CID_HOST, 4050)).expect("vsocket connection failed");
             //let qgs_stream = socket(AF_VSOCK, SOCK_STREAM, 0);
             let retry_times = 5;
-            let sock_addr = VsockAddr::new(self.vsock_cid, self.port);
+            let sock_addr = VsockAddr::new(VMADDR_CID_HOST, port);
             let socket = socket(
                 AddressFamily::Vsock,
                 SockType::Stream,
