@@ -287,15 +287,15 @@ impl CVM for TdxVM {
                 .with_context(|| format!("failed to connect to qgs vsock"))?;
 
                 
-            let qgs_stream = match UnixStream::from_std(socket).context("from_std") {
-                Ok(stream) => Stream::Vsock(stream),
-                Err(_) => {
-                    return Err(anyhow!("[process_cc_report] connect to qgs vsock failed"));
-                }
-            };
+            // let qgs_stream = match UnixStream::from_std(socket).context("from_std") {
+            //     Ok(stream) => Stream::Vsock(stream),
+            //     Err(_) => {
+            //         return Err(anyhow!("[process_cc_report] connect to qgs vsock failed"));
+            //     }
+            // };
 
-            let written_bytes = qgs_stream
-                .write(&p_blob_payload)
+            let written_bytes = socket
+                .send(&p_blob_payload)
                 .expect("[process_cc_report] write to qgs vsock failed");
             if written_bytes == 0 {
                 return Err(anyhow!("[process_cc_report] write to qgs vsock failed"));
