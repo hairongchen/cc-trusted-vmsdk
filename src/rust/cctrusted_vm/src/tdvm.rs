@@ -257,7 +257,7 @@ impl CVM for TdxVM {
         if !tdvmcall_flag {          
             const header_size: u32 = 4;
             let qgs_msg_bytes_array: [u8; (16 + 8 + TDX_REPORT_LEN) as usize] = unsafe { transmute(qgs_msg) };
-            let msg_size = qgs_msg_bytes_array.len();
+            let msg_size: u32 = qgs_msg_bytes_array.len();
             let msg_size_bytes_array: [u8; header_size as usize] = unsafe { transmute(msg_size.to_be()) }; 
 
             let p_blob_payload = [0; (header_size + 16 + 8 + TDX_REPORT_LEN) as usize];
@@ -278,7 +278,7 @@ impl CVM for TdxVM {
                 return Err(anyhow!("[process_cc_report] read from qgs vsock failed"));
             }
 
-            let mut in_msg_size: u32 = 0;
+            let mut in_msg_size = 0;
             for i in 0..header_size {
                 in_msg_size = (in_msg_size << 8) + (return_size_bytes_array[i as usize] & 0xFF);
             }
