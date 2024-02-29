@@ -295,7 +295,7 @@ impl CVM for TdxVM {
             };
 
             let _ = qgs_stream.shutdown(Shutdown::Both);
-
+            log::info!("OK");
             return Ok(qgs_msg_resp.id_quote[0..(qgs_msg_resp.quote_size as usize)].to_vec());
         }
 
