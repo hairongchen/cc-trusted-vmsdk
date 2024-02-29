@@ -247,7 +247,7 @@ impl CVM for TdxVM {
                     if port >= 65536 {
                         return Err(anyhow!("[process_cc_report] invalid vsock port config at {}", ATTEST_CFG_FILE_PATH));
                     }
-                    tdvmcall_flag = true;
+                    tdvmcall_flag = false;
                     break;
                 }
             }
