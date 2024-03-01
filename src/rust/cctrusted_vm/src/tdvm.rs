@@ -257,6 +257,7 @@ impl CVM for TdxVM {
         if !tdvmcall_flag {
             log::info!("[process_cc_report] get TDX quote with vsock");
             const HEADER_SIZE: u32 = 4;
+            const QUOTE_BUFFER_SIZE: u32 = 10000;
             let qgs_msg_bytes_array: [u8; (16 + 8 + TDX_REPORT_LEN) as usize] = unsafe { transmute(qgs_msg) };
             let msg_size: u32 = qgs_msg_bytes_array.len().try_into().unwrap();
             let msg_size_bytes_array: [u8; HEADER_SIZE as usize] = unsafe { transmute(msg_size.to_be()) }; 
@@ -277,8 +278,6 @@ impl CVM for TdxVM {
             connect(qgs_vsocket.as_raw_fd(), &vsock_addr)
                 .with_context(|| format!("[get_td_report] failed to connect to qgs vsock"))?;
 
-            log::info!("### send");
-
             match send(qgs_vsocket.as_raw_fd(), &p_blob_payload, MsgFlags::empty()) {
                 Ok(written_bytes) =>{
                      if written_bytes != p_blob_payload.len() {
@@ -288,7 +287,6 @@ impl CVM for TdxVM {
                 Err(e) => return Err(anyhow!("[get_td_report] Fail to send to qgs vsock: {:?}", e))
             }
 
-            log::info!("### recv1");
             let mut return_size_bytes_array = [0;HEADER_SIZE as usize];
             match recv(qgs_vsocket.as_raw_fd(), &mut return_size_bytes_array, MsgFlags::empty()) {
                 Ok(read_bytes) =>{
@@ -304,9 +302,7 @@ impl CVM for TdxVM {
                 in_msg_size = (in_msg_size << 8) + (return_size_bytes_array[i as usize] & 0xFF) as u32;
             }
 
-            log::info!("### recv2 try to read {} bytes", in_msg_size);
-            //let mut return_quote_bytes_array = Vec::new();
-            let mut return_quote_bytes_array = [0;10000];
+            let mut return_quote_bytes_array = [0;QUOTE_BUFFER_SIZE];
             match recv(qgs_vsocket.as_raw_fd(), &mut return_quote_bytes_array, MsgFlags::empty()) {
                 Ok(read_qgs_response_bytes) =>{
                     if read_qgs_response_bytes == 0 {
