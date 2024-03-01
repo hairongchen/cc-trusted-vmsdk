@@ -266,7 +266,6 @@ impl CVM for TdxVM {
             p_blob_payload[4..].copy_from_slice(&qgs_msg_bytes_array);
 
             let vsock_addr = VsockAddr::new(VMADDR_CID_HOST, port);
-            //let vsock_addr = VsockAddr::new(VMADDR_CID_HOST, port);
             let qgs_vsocket = socket(
                 AddressFamily::Vsock,
                 SockType::Stream,
@@ -278,6 +277,8 @@ impl CVM for TdxVM {
             connect(qgs_vsocket.as_raw_fd(), &vsock_addr)
                 .with_context(|| format!("[get_td_report] failed to connect to qgs vsock"))?;
 
+            log::info!("### send");
+
             match send(qgs_vsocket.as_raw_fd(), &p_blob_payload, MsgFlags::empty()) {
                 Ok(written_bytes) =>{
                      if written_bytes == 0 {
@@ -287,6 +288,7 @@ impl CVM for TdxVM {
                 Err(e) => return Err(anyhow!("[get_td_report] Fail to send to qgs vsock: {:?}", e))
             }
 
+            log::info!("### recv1");
             let mut return_size_bytes_array = [0;4];
             match recv(qgs_vsocket.as_raw_fd(), &mut return_size_bytes_array, MsgFlags::empty()) {
                 Ok(read_bytes) =>{
@@ -302,6 +304,7 @@ impl CVM for TdxVM {
                 in_msg_size = (in_msg_size << 8) + (return_size_bytes_array[i as usize] & 0xFF) as u32;
             }
 
+            log::info!("### recv2");
             let mut return_quote_bytes_array = Vec::new();
             match recv(qgs_vsocket.as_raw_fd(), &mut return_quote_bytes_array, MsgFlags::empty()) {
                 Ok(read_qgs_response_bytes) =>{
