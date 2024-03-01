@@ -277,7 +277,7 @@ impl CVM for TdxVM {
             )
             .context("[get_td_report] failed to create vsock socket")?;
 
-            connect(qgs_vsocket.as_raw_fd(), &vsock_addr)
+            let _ = connect(qgs_vsocket.as_raw_fd(), &vsock_addr)
                 .with_context(|| "[get_td_report] failed to connect to qgs vsock".to_string());
 
             match send(qgs_vsocket.as_raw_fd(), &p_blob_payload, MsgFlags::empty()) {
