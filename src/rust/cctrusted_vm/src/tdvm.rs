@@ -253,7 +253,7 @@ impl CVM for TdxVM {
             }
         }
 
-        // get quote wit vsock instead of TDVMCALL
+        // get quote using vsock instead of TDVMCALL
         if !tdvmcall_flag {
             log::info!("[process_cc_report] get TDX quote with vsock");
             const HEADER_SIZE: u32 = 4;
@@ -265,9 +265,6 @@ impl CVM for TdxVM {
             p_blob_payload[..4].copy_from_slice(&msg_size_bytes_array);
             p_blob_payload[4..].copy_from_slice(&qgs_msg_bytes_array);
 
-            //let mut qgs_stream = VsockStream::connect(&VsockAddr::new(get_local_cid().unwrap(), port)).expect("vsocket connection failed");
-            //let mut qgs_stream = VsockStream::connect(&VsockAddr::new(VMADDR_CID_HOST, 4050)).expect("vsocket connection failed");
-            //let qgs_stream = socket(AF_VSOCK, SOCK_STREAM, 0);
             let vsock_addr = VsockAddr::new(VMADDR_CID_HOST, port);
             let qgs_vsocket = socket(
                 AddressFamily::Vsock,
@@ -276,8 +273,6 @@ impl CVM for TdxVM {
                 None,
             )
             .context("[get_td_report] failed to create vsock socket")?;
-
-            //let socket = unsafe { std::os::unix::net::UnixStream::from_raw_fd(socket) };
 
             connect(qgs_vsocket.as_raw_fd(), &vsock_addr)
                 .with_context(|| format!("[get_td_report] failed to connect to qgs vsock"))?;
