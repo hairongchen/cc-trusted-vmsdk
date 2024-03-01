@@ -262,7 +262,7 @@ impl CVM for TdxVM {
                 unsafe { transmute(qgs_msg) };
             let msg_size: u32 = qgs_msg_bytes_array.len().try_into().unwrap();
             let msg_size_bytes_array: [u8; HEADER_SIZE as usize] =
-                unsafe { transmute(msg_size.to_be()) };
+                unsafe { transmute(msg_size.to_ne_bytes()()) };
 
             let mut p_blob_payload = [0; (HEADER_SIZE + 16 + 8 + TDX_REPORT_LEN) as usize];
             p_blob_payload[..4].copy_from_slice(&msg_size_bytes_array);
