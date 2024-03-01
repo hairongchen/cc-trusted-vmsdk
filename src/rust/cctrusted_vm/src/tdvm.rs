@@ -289,7 +289,7 @@ impl CVM for TdxVM {
                         return Err(anyhow!("[process_cc_report] write to qgs vsock failed"));
                     }
                 },
-                Err(e) => return Err(anyhow!("[get_td_report] Fail to send to qgs vsock"))
+                Err(e) => return Err(anyhow!("[get_td_report] Fail to send to qgs vsock: {:?}". e))
             }
 
             let mut return_size_bytes_array = [0;4];
@@ -299,7 +299,7 @@ impl CVM for TdxVM {
                        return Err(anyhow!("[process_cc_report] read from qgs vsock failed"));
                    }
                },
-               Err(e) => return Err(anyhow!("[get_td_report] Fail to read from qgs vsock"))
+               Err(e) => return Err(anyhow!("[get_td_report] Fail to read from qgs vsock: {:?}",e))
             }
 
             let mut in_msg_size = 0;
@@ -314,7 +314,7 @@ impl CVM for TdxVM {
                        return Err(anyhow!("[process_cc_report] read from qgs vsock failed"));
                    }
                },
-               Err(e) => return Err(anyhow!("[get_td_report] Fail to read from qgs vsock"))
+               Err(e) => return Err(anyhow!("[get_td_report] Fail to read from qgs vsock: {:?}", e))
             }
 
             let qgs_msg_resp = unsafe {
