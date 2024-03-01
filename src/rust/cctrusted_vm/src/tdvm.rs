@@ -268,7 +268,6 @@ impl CVM for TdxVM {
             //let mut qgs_stream = VsockStream::connect(&VsockAddr::new(get_local_cid().unwrap(), port)).expect("vsocket connection failed");
             //let mut qgs_stream = VsockStream::connect(&VsockAddr::new(VMADDR_CID_HOST, 4050)).expect("vsocket connection failed");
             //let qgs_stream = socket(AF_VSOCK, SOCK_STREAM, 0);
-            let retry_times = 5;
             let vsock_addr = VsockAddr::new(VMADDR_CID_HOST, port);
             let qgs_vsocket = socket(
                 AddressFamily::Vsock,
