@@ -257,7 +257,7 @@ impl CVM for TdxVM {
         if !tdvmcall_flag {
             log::info!("[process_cc_report] get TDX quote with vsock");
             const HEADER_SIZE: u32 = 4;
-            const QUOTE_BUFFER_SIZE: u32 = 10000;
+            const QUOTE_BUFFER_SIZE: usize = 10000;
             let qgs_msg_bytes_array: [u8; (16 + 8 + TDX_REPORT_LEN) as usize] = unsafe { transmute(qgs_msg) };
             let msg_size: u32 = qgs_msg_bytes_array.len().try_into().unwrap();
             let msg_size_bytes_array: [u8; HEADER_SIZE as usize] = unsafe { transmute(msg_size.to_be()) }; 
