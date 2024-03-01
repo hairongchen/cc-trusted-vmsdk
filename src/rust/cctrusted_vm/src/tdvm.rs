@@ -304,11 +304,10 @@ impl CVM for TdxVM {
 
             let mut return_quote_bytes_array = [0;QUOTE_BUFFER_SIZE];
             match recv(qgs_vsocket.as_raw_fd(), &mut return_quote_bytes_array, MsgFlags::empty()) {
-                Ok(read_qgs_response_bytes) =>{
+                Ok(read_qgs_response_bytes) => {
                     if read_qgs_response_bytes == 0 {
                        return Err(anyhow!("[process_cc_report] read quote body from qgs vsock failed: got 0 byte"));
                     }
-                    log::info!("### recv2 read {} bytes", read_qgs_response_bytes);
                },
                Err(e) => return Err(anyhow!("[get_td_report] Fail to read quote body from qgs vsock: {:?}", e))
             }
