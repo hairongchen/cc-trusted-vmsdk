@@ -29,7 +29,7 @@ fn main() {
         }
     };
 
-    info!("cc report size {}", report.len());
+    info!("cc report size {}", report.cc_report.len());
 
     // dump the cc report with API "dump_cc_report"
     // info!("call cc trusted API [dump_cc_report] to dump cc report!");
