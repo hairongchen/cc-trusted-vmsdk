@@ -304,7 +304,7 @@ impl CVM for TdxVM {
                 in_msg_size = (in_msg_size << 8) + (return_size_bytes_array[i as usize] & 0xFF) as u32;
             }
 
-            log::info!("### recv2");
+            log::info!("### recv2 try to read {} bytes", in_msg_size);
             let mut return_quote_bytes_array = Vec::new();
             match recv(qgs_vsocket.as_raw_fd(), &mut return_quote_bytes_array, MsgFlags::empty()) {
                 Ok(read_qgs_response_bytes) =>{
