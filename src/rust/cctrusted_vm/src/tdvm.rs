@@ -232,7 +232,6 @@ impl CVM for TdxVM {
         // use TDVMCALL by default except vsock config exists at ATTEST_CFG_FILE_PATH
         let mut tdvmcall_flag = true;
         let mut port: u32 = 0;
-        const ATTEST_CFG_FILE_PATH: &str = "/etc/tdx-attest.conf";
         if Path::new(ATTEST_CFG_FILE_PATH).exists() {
             let data_lines: Vec<String> = read_to_string(ATTEST_CFG_FILE_PATH)
             .unwrap()
