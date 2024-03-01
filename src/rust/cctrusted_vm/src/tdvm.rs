@@ -265,7 +265,8 @@ impl CVM for TdxVM {
             p_blob_payload[..4].copy_from_slice(&msg_size_bytes_array);
             p_blob_payload[4..].copy_from_slice(&qgs_msg_bytes_array);
 
-            let vsock_addr = VsockAddr::new(VMADDR_CID_HOST, port);
+            let vsock_addr = VsockAddr::new(8, port);
+            //let vsock_addr = VsockAddr::new(VMADDR_CID_HOST, port);
             let qgs_vsocket = socket(
                 AddressFamily::Vsock,
                 SockType::Stream,
