@@ -13,12 +13,12 @@ use core::ptr;
 use core::result::Result;
 use core::result::Result::Ok;
 use log::info;
+use nix::sys::socket::*;
 use nix::*;
 use std::fs::{read_to_string, File};
 use std::io::{BufReader, Read};
 use std::os::fd::AsRawFd;
 use std::path::Path;
-use nix::sys::socket::*;
 use vsock::VMADDR_CID_HOST;
 
 // TDX ioctl operation code to be used for get TDX quote and TD Report
@@ -228,17 +228,24 @@ impl CVM for TdxVM {
         let mut port: u32 = 0;
         if Path::new(ATTEST_CFG_FILE_PATH).exists() {
             let data_lines: Vec<String> = read_to_string(ATTEST_CFG_FILE_PATH)
-            .unwrap()
-            .lines()
-            .map(String::from)
-            .collect();
+                .unwrap()
+                .lines()
+                .map(String::from)
+                .collect();
 
             for line in data_lines {
                 if line.contains("port") {
-                    let element = line.split('=').last().expect("[process_cc_report] invalid vsock port config").trim_matches(' ');
+                    let element = line
+                        .split('=')
+                        .last()
+                        .expect("[process_cc_report] invalid vsock port config")
+                        .trim_matches(' ');
                     port = element.parse().unwrap();
                     if port >= 65536 {
-                        return Err(anyhow!("[process_cc_report] invalid vsock port config at {}", ATTEST_CFG_FILE_PATH));
+                        return Err(anyhow!(
+                            "[process_cc_report] invalid vsock port config at {}",
+                            ATTEST_CFG_FILE_PATH
+                        ));
                     }
                     tdvmcall_flag = false;
                     break;
@@ -251,9 +258,11 @@ impl CVM for TdxVM {
             log::info!("[process_cc_report] get TDX quote with vsock");
             const HEADER_SIZE: u32 = 4;
             const QUOTE_BUFFER_SIZE: usize = 10000;
-            let qgs_msg_bytes_array: [u8; (16 + 8 + TDX_REPORT_LEN) as usize] = unsafe { transmute(qgs_msg) };
+            let qgs_msg_bytes_array: [u8; (16 + 8 + TDX_REPORT_LEN) as usize] =
+                unsafe { transmute(qgs_msg) };
             let msg_size: u32 = qgs_msg_bytes_array.len().try_into().unwrap();
-            let msg_size_bytes_array: [u8; HEADER_SIZE as usize] = unsafe { transmute(msg_size.to_be()) }; 
+            let msg_size_bytes_array: [u8; HEADER_SIZE as usize] =
+                unsafe { transmute(msg_size.to_be().to_ne_bytes()) };
 
             let mut p_blob_payload = [0; (HEADER_SIZE + 16 + 8 + TDX_REPORT_LEN) as usize];
             p_blob_payload[..4].copy_from_slice(&msg_size_bytes_array);
@@ -269,44 +278,74 @@ impl CVM for TdxVM {
             .context("[get_td_report] failed to create vsock socket")?;
 
             connect(qgs_vsocket.as_raw_fd(), &vsock_addr)
-                .with_context(|| format!("[get_td_report] failed to connect to qgs vsock"))?;
+                .with_context(|| "[get_td_report] failed to connect to qgs vsock".to_string());
 
             match send(qgs_vsocket.as_raw_fd(), &p_blob_payload, MsgFlags::empty()) {
-                Ok(written_bytes) =>{
-                     if written_bytes != p_blob_payload.len() {
-                        return Err(anyhow!("[process_cc_report] send to qgs vsock failed: send {} bytes", written_bytes));
+                Ok(written_bytes) => {
+                    if written_bytes != p_blob_payload.len() {
+                        return Err(anyhow!(
+                            "[process_cc_report] send to qgs vsock failed: send {} bytes",
+                            written_bytes
+                        ));
                     }
-                },
-                Err(e) => return Err(anyhow!("[get_td_report] Fail to send to qgs vsock: {:?}", e))
+                }
+                Err(e) => {
+                    return Err(anyhow!(
+                        "[get_td_report] Fail to send to qgs vsock: {:?}",
+                        e
+                    ))
+                }
             }
 
-            let mut return_size_bytes_array = [0;HEADER_SIZE as usize];
-            match recv(qgs_vsocket.as_raw_fd(), &mut return_size_bytes_array, MsgFlags::empty()) {
-                Ok(read_bytes) =>{
+            let mut return_size_bytes_array = [0; HEADER_SIZE as usize];
+            match recv(
+                qgs_vsocket.as_raw_fd(),
+                &mut return_size_bytes_array,
+                MsgFlags::empty(),
+            ) {
+                Ok(read_bytes) => {
                     if read_bytes != HEADER_SIZE.try_into().unwrap() {
-                       return Err(anyhow!("[process_cc_report] read size header from qgs vsock failed: read {} bytes", read_bytes));
-                   }
-               },
-               Err(e) => return Err(anyhow!("[get_td_report] Fail to read size header from qgs vsock: {:?}",e))
+                        return Err(anyhow!("[process_cc_report] read size header from qgs vsock failed: read {} bytes", read_bytes));
+                    }
+                }
+                Err(e) => {
+                    return Err(anyhow!(
+                        "[get_td_report] Fail to read size header from qgs vsock: {:?}",
+                        e
+                    ))
+                }
             }
 
             let mut in_msg_size = 0;
             for i in 0..HEADER_SIZE {
-                in_msg_size = (in_msg_size << 8) + (return_size_bytes_array[i as usize] & 0xFF) as u32;
+                in_msg_size =
+                    (in_msg_size << 8) + (return_size_bytes_array[i as usize]) as u32;
             }
 
-            let mut return_quote_bytes_array = [0;QUOTE_BUFFER_SIZE];
-            match recv(qgs_vsocket.as_raw_fd(), &mut return_quote_bytes_array, MsgFlags::empty()) {
+            let mut return_quote_bytes_array = [0; QUOTE_BUFFER_SIZE];
+            match recv(
+                qgs_vsocket.as_raw_fd(),
+                &mut return_quote_bytes_array,
+                MsgFlags::empty(),
+            ) {
                 Ok(read_qgs_response_bytes) => {
                     if read_qgs_response_bytes == 0 {
-                       return Err(anyhow!("[process_cc_report] read quote body from qgs vsock failed: got 0 byte"));
+                        return Err(anyhow!(
+                            "[process_cc_report] read quote body from qgs vsock failed: got 0 byte"
+                        ));
                     }
-               },
-               Err(e) => return Err(anyhow!("[get_td_report] Fail to read quote body from qgs vsock: {:?}", e))
+                }
+                Err(e) => {
+                    return Err(anyhow!(
+                        "[get_td_report] Fail to read quote body from qgs vsock: {:?}",
+                        e
+                    ))
+                }
             }
 
             let qgs_msg_resp = unsafe {
-                let raw_ptr = ptr::addr_of!(return_quote_bytes_array) as *mut qgs_msg_get_quote_resp;
+                let raw_ptr =
+                    ptr::addr_of!(return_quote_bytes_array) as *mut qgs_msg_get_quote_resp;
                 raw_ptr.as_mut().unwrap() as &mut qgs_msg_get_quote_resp
             };
 
