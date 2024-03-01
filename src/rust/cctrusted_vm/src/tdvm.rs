@@ -289,10 +289,10 @@ impl CVM for TdxVM {
             }
 
             log::info!("### recv1");
-            let mut return_size_bytes_array = [0;4];
+            let mut return_size_bytes_array = [0;HEADER_SIZE as usize];
             match recv(qgs_vsocket.as_raw_fd(), &mut return_size_bytes_array, MsgFlags::empty()) {
                 Ok(read_bytes) =>{
-                    if read_bytes != HEADER_SIZE {
+                    if read_bytes != HEADER_SIZE.try_into().unwrap() {
                        return Err(anyhow!("[process_cc_report] read size header from qgs vsock failed: read {} bytes", read_bytes));
                    }
                },
