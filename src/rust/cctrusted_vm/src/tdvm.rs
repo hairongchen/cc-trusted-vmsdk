@@ -317,8 +317,7 @@ impl CVM for TdxVM {
 
             let mut in_msg_size = 0;
             for i in 0..HEADER_SIZE {
-                in_msg_size =
-                    (in_msg_size << 8) + (return_size_bytes_array[i as usize]) as u32;
+                in_msg_size = (in_msg_size << 8) + (return_size_bytes_array[i as usize]) as u32;
             }
 
             let mut return_quote_bytes_array = [0; QUOTE_BUFFER_SIZE];
