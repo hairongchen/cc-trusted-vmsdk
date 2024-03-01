@@ -306,7 +306,7 @@ impl CVM for TdxVM {
 
             log::info!("### recv2 try to read {} bytes", in_msg_size);
             //let mut return_quote_bytes_array = Vec::new();
-            let mut return_quote_bytes_array = [0;5050];
+            let mut return_quote_bytes_array = [0;10000];
             match recv(qgs_vsocket.as_raw_fd(), &mut return_quote_bytes_array, MsgFlags::empty()) {
                 Ok(read_qgs_response_bytes) =>{
                     if read_qgs_response_bytes == 0 {
