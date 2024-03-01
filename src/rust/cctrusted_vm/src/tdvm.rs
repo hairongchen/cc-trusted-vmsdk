@@ -281,8 +281,8 @@ impl CVM for TdxVM {
 
             match send(qgs_vsocket.as_raw_fd(), &p_blob_payload, MsgFlags::empty()) {
                 Ok(written_bytes) =>{
-                     if written_bytes == 0 {
-                        return Err(anyhow!("[process_cc_report] write to qgs vsock failed"));
+                     if written_bytes != p_blob_payload.len() {
+                        return Err(anyhow!("[process_cc_report] send to qgs vsock failed: send {} bytes", written_bytes));
                     }
                 },
                 Err(e) => return Err(anyhow!("[get_td_report] Fail to send to qgs vsock: {:?}", e))
@@ -292,8 +292,8 @@ impl CVM for TdxVM {
             let mut return_size_bytes_array = [0;4];
             match recv(qgs_vsocket.as_raw_fd(), &mut return_size_bytes_array, MsgFlags::empty()) {
                 Ok(read_bytes) =>{
-                    if read_bytes == 0 {
-                       return Err(anyhow!("[process_cc_report] read size header from qgs vsock failed: got 0 byte"));
+                    if read_bytes != HEADER_SIZE {
+                       return Err(anyhow!("[process_cc_report] read size header from qgs vsock failed: read {} bytes", read_bytes));
                    }
                },
                Err(e) => return Err(anyhow!("[get_td_report] Fail to read size header from qgs vsock: {:?}",e))
