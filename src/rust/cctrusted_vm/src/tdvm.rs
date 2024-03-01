@@ -6,7 +6,7 @@ use cctrusted_base::api_data::ReplayResult;
 use cctrusted_base::cc_type::*;
 use cctrusted_base::eventlog::EventLogs;
 use cctrusted_base::tcg::*;
-use cctrusted_base::tdx::{common::*, quote::*, :report::*, rtmr::TdxRTMR};
+use cctrusted_base::tdx::{common::*, quote::*, report::*, rtmr::TdxRTMR};
 use core::convert::TryInto;
 use core::mem::*;
 use core::ptr;
