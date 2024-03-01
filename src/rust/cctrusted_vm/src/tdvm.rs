@@ -289,7 +289,7 @@ impl CVM for TdxVM {
                         return Err(anyhow!("[process_cc_report] write to qgs vsock failed"));
                     }
                 },
-                Err(e) => return Err(anyhow!("[get_td_report] Fail to send to qgs vsock: {:?}". e))
+                Err(e) => return Err(anyhow!("[get_td_report] Fail to send to qgs vsock: {:?}", e))
             }
 
             let mut return_size_bytes_array = [0;4];
