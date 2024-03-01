@@ -293,10 +293,10 @@ impl CVM for TdxVM {
             match recv(qgs_vsocket.as_raw_fd(), &mut return_size_bytes_array, MsgFlags::empty()) {
                 Ok(read_bytes) =>{
                     if read_bytes == 0 {
-                       return Err(anyhow!("[process_cc_report] read from qgs vsock failed"));
+                       return Err(anyhow!("[process_cc_report] read size header from qgs vsock failed: got 0 byte"));
                    }
                },
-               Err(e) => return Err(anyhow!("[get_td_report] Fail to read from qgs vsock: {:?}",e))
+               Err(e) => return Err(anyhow!("[get_td_report] Fail to read size header from qgs vsock: {:?}",e))
             }
 
             let mut in_msg_size = 0;
@@ -309,10 +309,10 @@ impl CVM for TdxVM {
             match recv(qgs_vsocket.as_raw_fd(), &mut return_quote_bytes_array, MsgFlags::empty()) {
                 Ok(read_qgs_response_bytes) =>{
                     if read_qgs_response_bytes == 0 {
-                       return Err(anyhow!("[process_cc_report] read from qgs vsock failed"));
+                       return Err(anyhow!("[process_cc_report] read quote body from qgs vsock failed: got 0 byte"));
                    }
                },
-               Err(e) => return Err(anyhow!("[get_td_report] Fail to read from qgs vsock: {:?}", e))
+               Err(e) => return Err(anyhow!("[get_td_report] Fail to read quote body from qgs vsock: {:?}", e))
             }
 
             let qgs_msg_resp = unsafe {
