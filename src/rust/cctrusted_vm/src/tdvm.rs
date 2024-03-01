@@ -323,6 +323,7 @@ impl CVM for TdxVM {
         }
 
         log::info!("[process_cc_report] get TDX quote with TDVMCALL");
+
         //build quote generation request header
         let mut quote_header = tdx_quote_hdr {
             version: 1,
